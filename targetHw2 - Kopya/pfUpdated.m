@@ -82,30 +82,30 @@ end
     for i =1:length(xi) 
         SigmaBar = SigmaBar + wi(i).*((A*xi(:,i)+G*wk(:,i))'-muBar)'*((A*xi(:,i)+G*wk(:,i))'-muBar)
     end
-        mmse = [0 0]
+        mmse1 = [0 0]
 
     for i =1:length(xi)
 
         p = mvnpdf((C*xi(:,i)-[xi(1,i) xi(3,i)]),[],R)
-        pw(:,i) = p*(wi(i))'
+        pw(:,i) = p(1)*(wi(i))'
         pw(:,i) = pw(:,i)./(sum(pw,"all"))
 
-        mmse = mmse + pw(:,i)*[xi(1,i) ; xi(3,i)]'
+        mmse1 = mmse1 + pw(:,i)*[xi(1,i) ; xi(3,i)]'
 
      end
 %     for i =1:length(xi)
 
-%     [xiRe,wiRe] = resample(xi,wi)
-% 
-%     xi = xiRe
-%     wi = wiRe(1)
+    [xiRe,wiRe] = resample(xi,wi)
+
+    xi = xiRe
+    pw = wiRe
 %     end
 plot(xi(1,:),xi(3,:),'r*')
 hold on
 xi = [yi(1,:) ; vx*ones(1,length(yi));yi(2,:);vy*ones(1,length(yi))]
 muBarRe = [0 0 0 0] 
 for i =1:length(R) 
-    muBarRe = muBar + pw(i)*(A*xi(:,i)+G*wk(:,i))'
+    muBarRe = muBarRe + pw(i)*(A*xi(:,i)+G*wk(:,i))'
 end
 
 SigmaBarRe = zeros(4,4);
@@ -113,19 +113,26 @@ SigmaBarRe = zeros(4,4);
 for i =1:length(R) 
     SigmaBarRe = SigmaBarRe + pw(i).*((A*xi(:,i)+G*wk(:,i))'-muBarRe)'*((A*xi(:,i)+G*wk(:,i))'-muBarRe)
 end
+mmse2 = [0 0]
 for i =1:length(xi)  
+            mmse2 = mmse2 + pw(:,i)*[xi(1,i) ; xi(3,i)]'
+
         yi(:,i) = C*(A*xi(:,i)+G*wk(:,i)) + vk(:,i)
 end
 plot(xi(1,:),xi(3,:),'c*')
 hold on;
 plot(yi(1,:),yi(2,:),'g*')
 
-plot(mmse(1,1),mmse(1,2),'b*')
+plot(mmse1(1,1),mmse1(1,2),'b*')
+plot(mmse2(1,1),mmse2(1,2),'b*')
+
+%plot(mmse3(1,1),mmse3(1,2),'b*')
+
 error_ellipse(C*Sigma*C' +R, C*mu',0.99)
 error_ellipse(C*SigmaBar*C' +R, C*muBar',0.99)
-error_ellipse(C*SigmaBarRe*C'+R, C*muBarRe',0.99)
+error_ellipse(C*SigmaBarRe*C'+R, C*(A*muBar'),0.99)
 title('Particle Filter')
-legend('Initial samples', 'Time Update Result', 'Measurement Updated Time Update Result','MMSE')
+legend('Initial samples', 'Time Update Result', 'Measurement Updated Time Update Result','MMSE','','Resampling Result')
 grid minor
 %  for i=1:length(xi)-stepSize
 %     
